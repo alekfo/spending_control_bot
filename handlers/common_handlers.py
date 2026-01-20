@@ -3,7 +3,7 @@ from keyboards.employees_keyboards import employees_main_menu_keyboard
 from keyboards.main_keyboards import start_registration_keyboard
 from states import EmployeeStates, AdminStates
 from config import admin_id
-from common_func.common_func import does_clients_exists
+from google_sheet_service.google_sheet_main import does_employee_exists
 
 import logging
 from aiogram import types, Router
@@ -41,7 +41,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
     )
 
     # Проверяем, существует ли пользователь в БД
-    user_name = does_clients_exists(user_id)
+    user_name = does_employee_exists(user_id)
 
     if user_name:
         await message.answer(
@@ -65,7 +65,7 @@ async def handle_any_message(message: types.Message, state: FSMContext):
 
 
 @cancel_router.message(Command("cancel"))
-@cancel_router.message(lambda message: message.text == "Отмена")
+@cancel_router.message(lambda message: message.text == "Вернуться в основное меню")
 async def cancel_handler(message: types.Message, state: FSMContext):
     """Сброс состояния"""
     current_state = await state.get_state()

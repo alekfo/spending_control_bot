@@ -9,15 +9,15 @@ def admins_main_menu_keyboard():
     builder = InlineKeyboardBuilder()
 
     # Добавляем кнопки по одной
-    builder.add(types.InlineKeyboardButton(
+    builder.row(types.InlineKeyboardButton(
         text="Все сотрудники",
-        callback_data="get_all_empoyees"
+        callback_data="get_all_employees"
     ))
-    builder.add(types.InlineKeyboardButton(
-        text="Расходы",
+    builder.row(types.InlineKeyboardButton(
+        text="Расходы сотрудника",
         callback_data="spendings"
     ))
-    builder.add(types.InlineKeyboardButton(
+    builder.row(types.InlineKeyboardButton(
             text="Ссылка на таблицу",
             url="https://docs.google.com/spreadsheets/d/1Q3LadqbbZx3MVwuOVo9I76iPfQkxW-Ah9jbe_bAvWAo/edit?gid=0#gid=0"))
 

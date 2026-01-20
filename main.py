@@ -1,5 +1,7 @@
 from config import BOT_TOKEN, admin_id
 from handlers.common_handlers import cancel_router, common_router
+from handlers.admin_handlers import admin_router
+from handlers.employees_handlers import employee_router
 
 import asyncio
 import logging
@@ -23,6 +25,8 @@ dp = Dispatcher(storage=storage)
 
 dp.include_router(cancel_router)
 dp.include_router(common_router)
+dp.include_router(admin_router)
+dp.include_router(employee_router)
 
 # Главная асинхронная функция
 async def main():

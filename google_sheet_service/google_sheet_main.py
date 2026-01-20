@@ -68,3 +68,12 @@ if __name__ == '__main__':
     my_google_wb = setup_sheets_api()
     # some_data = menage_google_sheet(my_google_wb)
     test_google_sheet(my_google_wb)
+
+def does_employee_exists(employees_id):
+    return True
+
+def get_all_employees():
+    return "here are all employees"
+
+def get_spending_by_name(emp_id, month_to_check):
+    return f'here is spending of {emp_id} on {month_to_check} period'
