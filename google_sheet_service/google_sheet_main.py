@@ -70,6 +70,7 @@ if __name__ == '__main__':
     test_google_sheet(my_google_wb)
 
 def does_employee_exists(employees_id):
+    wb = setup_sheets_api()
     return True
 
 def get_all_employees():
@@ -77,3 +78,6 @@ def get_all_employees():
 
 def get_spending_by_name(emp_id, month_to_check):
     return f'here is spending of {emp_id} on {month_to_check} period'
+
+def add_new_employee(user_id, full_name, job_title, work_number):
+    return True

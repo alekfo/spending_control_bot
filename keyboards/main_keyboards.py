@@ -23,6 +23,17 @@ def return_keyboard():
 
     return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
 
+def back_keyboard():
+    builder = InlineKeyboardBuilder()
+
+    # Добавляем кнопки по одной
+    builder.add(types.InlineKeyboardButton(
+        text="Назад",
+        callback_data="back"
+    ))
+
+    return builder.as_markup()
+
 def month_keyboard():
     """Создаем клавиатуру с месяцами"""
 

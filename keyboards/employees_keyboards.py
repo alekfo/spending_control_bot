@@ -17,3 +17,47 @@ def employees_main_menu_keyboard():
     ))
 
     return builder.as_markup()
+
+def job_title_keyboard():
+    """Создаем клавиатуру с должностями"""
+
+    builder = InlineKeyboardBuilder()
+
+    # Описываем все кнопки
+    builder.add(
+        types.InlineKeyboardButton(
+            text="Водитель",
+            callback_data="January"
+        ),
+        types.InlineKeyboardButton(
+            text="Логист",
+            callback_data="February"
+        ),
+        types.InlineKeyboardButton(
+            text="Грузчик",
+            callback_data="March"
+        ),
+        types.InlineKeyboardButton(
+            text="Назад",
+            callback_data="back"
+        )
+
+    )
+
+    # Указываем, как расположить кнопки: 1 в первом ряду
+    builder.adjust(1)
+
+def confirmation_keyboard(user_id):
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        types.InlineKeyboardButton(
+            text="✅ Подтвердить",
+            callback_data=f"approve_registration_{user_id}"
+        ),
+        types.InlineKeyboardButton(
+            text="❌ Отклонить",
+            callback_data=f"reject_registration_{user_id}"
+        )
+    )
+
+    return builder.as_markup()

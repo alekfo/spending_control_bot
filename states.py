@@ -4,6 +4,10 @@ from aiogram.fsm.state import State, StatesGroup
 class EmployeeStates(StatesGroup):
     """Класс для хранения состояний клиента"""
     wait_for_start = State()
+    getting_employees_name = State()
+    getting_employees_job_title = State()
+    getting_employees_work_number = State()
+    end_registration = State()
 
 class AdminStates(StatesGroup):
     """Класс для хранения состояний админа"""
