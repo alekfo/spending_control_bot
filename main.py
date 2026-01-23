@@ -2,6 +2,7 @@ from config import BOT_TOKEN, admin_id
 from handlers.common_handlers import cancel_router, common_router
 from handlers.admin_handlers import admin_router
 from handlers.employees_handlers import employee_router
+from data.database import init_db
 
 import asyncio
 import logging
@@ -33,6 +34,8 @@ async def main():
     """
     Запуск бота
     """
+    init_db()
+
     # Запускаем polling (постоянный опрос серверов Telegram)
     logger.info('Бот запущен')
     # Установка команд бота
@@ -45,7 +48,6 @@ async def main():
 
 # Точка входа в программу
 if __name__ == "__main__":
-    # Инициализация БД - теперь синхронно
     try:
         # Запускаем бота
         asyncio.run(main())

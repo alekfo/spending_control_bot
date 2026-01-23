@@ -12,7 +12,5 @@ class EmployeeStates(StatesGroup):
 class AdminStates(StatesGroup):
     """Класс для хранения состояний админа"""
     in_admins_main_menu = State()
-    getting_all_employees = State()
     getting_employees_id_to_get_spending = State()
     getting_month_to_get_spending = State()
-    getting_employee_spending = State()

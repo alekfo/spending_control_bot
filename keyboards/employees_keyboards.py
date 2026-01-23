@@ -8,11 +8,11 @@ def employees_main_menu_keyboard():
 
     # Добавляем кнопки по одной
     builder.add(types.InlineKeyboardButton(
-        text="Показать мои расходы",
+        text="💰Показать мои расходы",
         callback_data="show_my_spendings"
     ))
     builder.add(types.InlineKeyboardButton(
-        text="Добавить расход",
+        text="➕Добавить расход",
         callback_data="show_spending"
     ))
 
@@ -26,19 +26,19 @@ def job_title_keyboard():
     # Описываем все кнопки
     builder.add(
         types.InlineKeyboardButton(
-            text="Водитель",
-            callback_data="January"
+            text="🚚Водитель",
+            callback_data="driver"
         ),
         types.InlineKeyboardButton(
-            text="Логист",
-            callback_data="February"
+            text="📊Логист",
+            callback_data="logistician"
         ),
         types.InlineKeyboardButton(
-            text="Грузчик",
-            callback_data="March"
+            text="💪Грузчик",
+            callback_data="loader"
         ),
         types.InlineKeyboardButton(
-            text="Назад",
+            text="↩️Назад",
             callback_data="back"
         )
 
@@ -46,6 +46,8 @@ def job_title_keyboard():
 
     # Указываем, как расположить кнопки: 1 в первом ряду
     builder.adjust(1)
+
+    return builder.as_markup()
 
 def confirmation_keyboard(user_id):
     builder = InlineKeyboardBuilder()

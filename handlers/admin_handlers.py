@@ -4,13 +4,14 @@ from config import admin_id
 from keyboards.main_keyboards import return_keyboard, month_keyboard
 from states import EmployeeStates, AdminStates
 from handlers.common_handlers import cancel_handler
-from google_sheet_service.google_sheet_main import get_all_employees, does_employee_exists, get_spending_by_name, add_new_employee
-from employees_handlers import pending_registrations
+from google_sheet_service.google_sheet_main import synchronize
+from data.database import get_all_employees, does_employee_exists, get_spending_by_name, add_new_employee, get_session
+from handlers.employees_handlers import pending_registrations
 
 from datetime import datetime
 from io import BytesIO
 import logging
-from aiogram import types, F, Router
+from aiogram import types, F, Router, Bot
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import FSInputFile, BufferedInputFile
@@ -19,6 +20,31 @@ from aiogram.types import ReplyKeyboardRemove
 
 logger = logging.getLogger(__name__)
 admin_router = Router()
+
+@admin_router.callback_query(lambda c: c.data == "synchronize", AdminStates.in_admins_main_menu)
+async def synchronize_google_sheet(callback_query: types.CallbackQuery, state: FSMContext):
+    """
+    Обработчик callback-запроса от кнопки "Синхронизировать Google-таблицу"
+    только в состоянии AdminStates.in_admins_main_menu
+    """
+
+    # Отвечаем на callback, чтобы убрать "часики" у кнопки
+    await callback_query.answer()
+    try:
+        result = synchronize()
+    except Exception as e:
+        logger.error(f"Ошибка при синхронизации Google-таблицы: {e}")
+        await callback_query.message.answer(
+            f"Ошибка при синхронизации Google-таблицы: {e}",
+            reply_markup=return_keyboard()
+        )
+
+
+    await callback_query.message.answer(
+        f"✅Таблицы успешно синзронизированы",
+        reply_markup=return_keyboard()
+    )
+
 
 @admin_router.callback_query(lambda c: c.data == "get_all_employees", AdminStates.in_admins_main_menu)
 async def get_all_employees_hand(callback_query: types.CallbackQuery, state: FSMContext):
@@ -29,13 +55,15 @@ async def get_all_employees_hand(callback_query: types.CallbackQuery, state: FSM
 
     # Отвечаем на callback, чтобы убрать "часики" у кнопки
     await callback_query.answer()
-    await state.set_state(AdminStates.getting_all_employees)
 
     result = get_all_employees()
+    output = '👤👤Все сотрудники:\n'
+    for i_emp in result:
+        output += i_emp
 
     # Отправляем новое сообщение
     await callback_query.message.answer(
-        f"Все сотрудники:\n{result}",
+        f"{output}",
         reply_markup=return_keyboard()
     )
 
@@ -50,16 +78,24 @@ async def get_employees_id_to_get_spending(callback_query: types.CallbackQuery, 
     await state.set_state(AdminStates.getting_employees_id_to_get_spending)
 
     await callback_query.message.answer(
-        f"Введите ID сотрудника",
+        f"✏️Введите телеграм-ID сотрудника",
         reply_markup=return_keyboard()
     )
 
 @admin_router.message(StateFilter(AdminStates.getting_employees_id_to_get_spending))
 async def get_month_to_get_spending(message: types.Message, state: FSMContext):
-    employees_id = message.text
+
+    try:
+        employees_id = int(message.text)
+    except ValueError as e:
+        await message.answer(
+            f"⚠️Телеграм-ID сотрудника может состоять только из цифр. Попробуйте снова",
+            reply_markup=return_keyboard()
+        )
+        return
     if not does_employee_exists(employees_id):
         await message.answer(
-            f"Введите корреткный ID сотрудника",
+            f"⚠️️Сотрудника с таким телеграм-ID не существует. Попробуйте снова",
             reply_markup=return_keyboard()
         )
         return
@@ -87,12 +123,12 @@ async def get_spending(callback_query: types.CallbackQuery, state: FSMContext):
             await callback_query.message.delete()
             await state.set_state(AdminStates.getting_employees_id_to_get_spending)
             await callback_query.message.answer(
-                f"Введите ID сотрудника",
+                f"✏️Введите телеграм-ID сотрудника",
                 reply_markup=return_keyboard()
             )
             return
         await callback_query.message.answer(
-            f"Выберите месяц из педложенных",
+            f"⚠️Выберите месяц из педложенных",
             reply_markup=month_keyboard()
         )
         return
@@ -101,7 +137,7 @@ async def get_spending(callback_query: types.CallbackQuery, state: FSMContext):
         month_to_check=month_to_check
     )
 
-    await state.set_state(AdminStates.getting_employee_spending)
+    await state.set_state(AdminStates.in_admins_main_menu)
 
     employee_data = await state.get_data()
 
@@ -116,7 +152,7 @@ async def get_spending(callback_query: types.CallbackQuery, state: FSMContext):
 
 # Обработчик для админских действий
 @admin_router.callback_query(lambda c: c.data.startswith(("approve_registration_", "reject_registration_")))
-async def handle_registration_decision(callback_query: types.CallbackQuery, bot: types.Bot):
+async def handle_registration_decision(callback_query: types.CallbackQuery, bot: Bot):
     """Обработка решения админа по регистрации"""
     await callback_query.answer()
 
@@ -137,12 +173,14 @@ async def handle_registration_decision(callback_query: types.CallbackQuery, bot:
 
     if action == 'approve':
         # Добавляем пользователя в Google Sheets
+        session = get_session()
         try:
             result = add_new_employee(
-                user_id=str(user_id),
-                full_name=user_data.get('employees_name', ''),
-                job_title=user_data.get('job_title', ''),
-                work_number=user_data.get('employees_work_number', '')
+                session,
+                user_id,
+                user_data.get('employees_name', ''),
+                user_data.get('job_title', ''),
+                user_data.get('employees_work_number', '')
             )
 
             if result:

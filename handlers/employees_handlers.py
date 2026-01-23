@@ -7,7 +7,7 @@ from handlers.common_handlers import cancel_handler
 from datetime import datetime
 from io import BytesIO
 import logging
-from aiogram import types, F, Router
+from aiogram import types, F, Router, Bot
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import FSInputFile, BufferedInputFile
@@ -34,22 +34,23 @@ async def start_registration(callback_query: types.CallbackQuery, state: FSMCont
 
     # Отправляем новое сообщение
     await callback_query.message.answer(
-        f"Введите Ваше полное ФИО",
+        "👤 *Регистрация сотрудника*\n\n"
+        "📝 Введите Ваше полное ФИО (Иванов Иван Иванович):",
+        parse_mode="Markdown",
         reply_markup=return_keyboard()
     )
 
-@employee_router.callback_query(StateFilter(EmployeeStates.getting_employees_name))
+@employee_router.message(StateFilter(EmployeeStates.getting_employees_name))
 async def start_registration(message: types.Message, state: FSMContext):
-    # Сохраняем данные сотрудника в state
     try:
         employees_name = message.text.split()
-        if len(employees_name) != 2:
+        if len(employees_name) != 3:
             raise ValueError('Некорретный ввод. ФИО должно быть полным. Попробуйте снова')
-        if not message.text.isalpha():
+        if any([not i_part.isalpha() for i_part in employees_name]):
             raise ValueError('Некорретный ввод. ФИО не должно состоять из цифр. Попробуйте снова')
     except ValueError as e:
         await message.answer(
-            f"Ошибка! {e}",
+            f"❌Ошибка! {e}",
             reply_markup=return_keyboard()
         )
     else:
@@ -59,14 +60,16 @@ async def start_registration(message: types.Message, state: FSMContext):
             employees_name=employees_name
         )
         await message.answer(
-            f"Записал!\nТеперь пришлите Вашу должность",
+            f"✅ *ФИО сохранено:* {employees_name}\n\n"
+            f"💼 Теперь выберите Вашу должность:",
+            parse_mode="Markdown",
             reply_markup=job_title_keyboard()
         )
 
 @employee_router.callback_query(StateFilter(EmployeeStates.getting_employees_job_title))
 async def start_registration(callback_query: types.CallbackQuery, state: FSMContext):
     job_title_list = [
-        'Водитель', 'Логист', 'Грузчик'
+        'driver', 'logistician', 'loader'
     ]
     job_title_to_check = callback_query.data
 
@@ -76,12 +79,12 @@ async def start_registration(callback_query: types.CallbackQuery, state: FSMCont
             await callback_query.message.delete()
             await state.set_state(EmployeeStates.getting_employees_name)
             await callback_query.message.answer(
-                f"Введите Ваше полное ФИО",
+                f"📝 Введите Ваше полное ФИО (Иванов Иван Иванович):",
                 reply_markup=return_keyboard()
             )
             return
         await callback_query.message.answer(
-            f"Выберите должность из педложенных",
+            f"💼Выберите должность из предложенных",
             reply_markup=job_title_keyboard()
         )
         return
@@ -97,7 +100,8 @@ async def start_registration(callback_query: types.CallbackQuery, state: FSMCont
     await state.set_state(EmployeeStates.getting_employees_work_number)
 
     await callback_query.message.answer(
-        f"Отлично! Пришлите ваш табельный номер для проверки администратором",
+        f"Отлично!\n\n"
+        f"📋Пришлите ваш табельный номер для проверки администратором",
         reply_markup=back_keyboard()
     )
 
@@ -113,12 +117,12 @@ async def back_to_job_title(callback_query: types.CallbackQuery, state: FSMConte
     await callback_query.message.delete()
 
     await callback_query.message.answer(
-        f"Выберите должность из предложенных",
+        f"💼Выберите должность из предложенных",
         reply_markup=job_title_keyboard()
     )
 
-@employee_router.callback_query(StateFilter(EmployeeStates.getting_employees_work_number))
-async def start_registration(message: types.Message, state: FSMContext, bot: types.Bot):
+@employee_router.message(StateFilter(EmployeeStates.getting_employees_work_number))
+async def start_registration(message: types.Message, state: FSMContext, bot: Bot):
     # Сохраняем данные сотрудника в state
     try:
         employees_work_number = message.text.strip()
@@ -126,7 +130,7 @@ async def start_registration(message: types.Message, state: FSMContext, bot: typ
             raise ValueError('Некорретный ввод. Табельный номер должен состоять только из цифр. Попробуйте ввести снова')
     except ValueError as e:
         await message.answer(
-            f"Ошибка! {e}",
+            f"❌Ошибка! {e}",
             reply_markup=return_keyboard()
         )
     else:
@@ -143,11 +147,11 @@ async def start_registration(message: types.Message, state: FSMContext, bot: typ
         # Формируем сообщение для админа
         admin_message = (
             "👤*Новый сотрудник!*\n\n"
-            f"*Telegram_ID:* {new_user_data.get('clients_id', '')}\n"
-            f"*ФИО:* {new_user_data.get('employees_name', '')}\n"
-            f"*Длжность:* {new_user_data.get('job_title', '')}\n"
-            f"*Табельный номер:* {new_user_data.get('employees_work_number', '')}\n"
-            f"Подтвердить регистрацию?"
+            f"🆔*Telegram_ID:* {new_user_data.get('clients_id', '')}\n"
+            f"📝*ФИО:* {new_user_data.get('employees_name', '')}\n"
+            f"💼*Длжность:* {new_user_data.get('job_title', '')}\n"
+            f"🔢*Табельный номер:* {new_user_data.get('employees_work_number', '')}\n\n"
+            f"❓Подтвердить регистрацию?"
         )
 
         # Сохраняем данные пользователя в словарь ожидающих подтверждения
@@ -169,13 +173,13 @@ async def start_registration(message: types.Message, state: FSMContext, bot: typ
         except Exception as e:
             logger.error(f"Ошибка отправки админу {admin_id}: {e}")
             await message.answer(
-                f"Ошибка отправки данных администратору. Попробуйте позже.",
+                f"❌Ошибка отправки данных администратору. Попробуйте позже.",
                 reply_markup=return_keyboard()
             )
             return
 
         await message.answer(
-            f"Все необходимые данные получены и отправлены администратору на согласование!\n"
-            f"По результатам согласования Вы получите уведомление. До встречи!",
+            f"✅ Все необходимые данные получены и отправлены администратору на согласование!\n"
+            f"📨По результатам согласования Вы получите уведомление. До встречи!",
             reply_markup=return_keyboard()
         )

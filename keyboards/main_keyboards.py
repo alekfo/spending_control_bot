@@ -18,7 +18,7 @@ def return_keyboard():
     builder = ReplyKeyboardBuilder()
 
     builder.row(
-        types.KeyboardButton(text="Вернуться в основное меню")
+        types.KeyboardButton(text="↩️Вернуться в основное меню")
     )
 
     return builder.as_markup(resize_keyboard=True, one_time_keyboard=True)
@@ -28,7 +28,7 @@ def back_keyboard():
 
     # Добавляем кнопки по одной
     builder.add(types.InlineKeyboardButton(
-        text="Назад",
+        text="↩️Назад",
         callback_data="back"
     ))
 

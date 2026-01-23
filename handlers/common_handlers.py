@@ -3,7 +3,7 @@ from keyboards.employees_keyboards import employees_main_menu_keyboard
 from keyboards.main_keyboards import start_registration_keyboard
 from states import EmployeeStates, AdminStates
 from config import admin_id
-from google_sheet_service.google_sheet_main import does_employee_exists
+from data.database import does_employee_exists
 
 import logging
 from aiogram import types, Router
@@ -28,8 +28,9 @@ async def cmd_start(message: types.Message, state: FSMContext):
 
     if user_id == admin_id:
         await message.answer(
-            f'Вы яляетесь администратором чат-бота\n\n'
-            f'Выберите действие🚀',
+            f'👨‍💼 *Вы — администратор системы*\n\n'
+            f'🚀 Выберите действие:',
+            parse_mode="Markdown",
             reply_markup=admins_main_menu_keyboard()
         )
         await state.set_state(AdminStates.in_admins_main_menu)
@@ -45,12 +46,16 @@ async def cmd_start(message: types.Message, state: FSMContext):
 
     if user_name:
         await message.answer(
-            f'Привет! Выбери действие',
+            f'👋 *С вовзращением!*\n\n'
+            f'💼 Выберите действие в системе:',
+            parse_mode="Markdown",
             reply_markup=employees_main_menu_keyboard()
         )
     else:
         await message.answer(
-            'Привет! Для продолжения необходимо пройти регистрацию',
+            '👋 *Добро пожаловать в чат-бот контроля расходов отдела логистики VooMoo!*\n\n'
+            '📝 Для работы в системе необходимо пройти регистрацию',
+            parse_mode="Markdown",
             reply_markup=start_registration_keyboard()
         )
         # Логируем нового пользователя
@@ -65,7 +70,7 @@ async def handle_any_message(message: types.Message, state: FSMContext):
 
 
 @cancel_router.message(Command("cancel"))
-@cancel_router.message(lambda message: message.text == "Вернуться в основное меню")
+@cancel_router.message(lambda message: message.text == "↩️Вернуться в основное меню")
 async def cancel_handler(message: types.Message, state: FSMContext):
     """Сброс состояния"""
     current_state = await state.get_state()
