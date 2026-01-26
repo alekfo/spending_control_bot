@@ -43,10 +43,12 @@ async def start_registration(callback_query: types.CallbackQuery, state: FSMCont
 @employee_router.message(StateFilter(EmployeeStates.getting_employees_name))
 async def start_registration(message: types.Message, state: FSMContext):
     try:
-        employees_name = message.text.split()
-        if len(employees_name) != 3:
+
+        employees_name = message.text
+        employees_name_list = employees_name.split()
+        if len(employees_name_list) != 3:
             raise ValueError('Некорретный ввод. ФИО должно быть полным. Попробуйте снова')
-        if any([not i_part.isalpha() for i_part in employees_name]):
+        if any([not i_part.isalpha() for i_part in employees_name_list]):
             raise ValueError('Некорретный ввод. ФИО не должно состоять из цифр. Попробуйте снова')
     except ValueError as e:
         await message.answer(

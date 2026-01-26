@@ -56,14 +56,38 @@ async def get_all_employees_hand(callback_query: types.CallbackQuery, state: FSM
     # Отвечаем на callback, чтобы убрать "часики" у кнопки
     await callback_query.answer()
 
-    result = get_all_employees()
-    output = '👤👤Все сотрудники:\n'
-    for i_emp in result:
-        output += i_emp
+    employees = await get_all_employees()
 
-    # Отправляем новое сообщение
+    if not employees:
+        await callback_query.message.answer(
+            "📭 *Список сотрудников пуст*\n\n"
+            "В системе пока нет зарегистрированных сотрудников.",
+            parse_mode="Markdown",
+            reply_markup=return_keyboard()
+        )
+        return
+
+    output = "👥 *СПИСОК СОТРУДНИКОВ*\n\n"
+
+    for i, emp in enumerate(employees, 1):
+        # Определяем эмодзи для должности
+        job_emoji = {
+            'driver': '🚚',
+            'logistician': '📊',
+            'loader': '💪'
+        }.get(emp.job_title, '👤')
+
+        output += (
+            f"{i}. {job_emoji} *{emp.name}*\n"
+            f"   ├─ 🆔 TG ID: `{emp.clients_telegram_id}`\n"
+            f"   ├─ 💼 Должность: {emp.job_title}\n"
+            f"   └─ 🔢 Таб. номер: {emp.employees_work_number}\n\n"
+        )
+    output += f"📊 *Всего сотрудников:* {len(employees)}"
+
     await callback_query.message.answer(
-        f"{output}",
+        output,
+        parse_mode="Markdown",
         reply_markup=return_keyboard()
     )
 
@@ -175,13 +199,13 @@ async def handle_registration_decision(callback_query: types.CallbackQuery, bot:
         # Добавляем пользователя в Google Sheets
         session = get_session()
         try:
-            result = add_new_employee(
-                session,
+            result = await add_new_employee(
                 user_id,
                 user_data.get('employees_name', ''),
                 user_data.get('job_title', ''),
                 user_data.get('employees_work_number', '')
             )
+            logger.info(f"Добавлен новый пользователь: Имя: {user_data.get('employees_name', '')}, Телеграм-id: {user_id}")
 
             if result:
                 # Отправляем уведомление пользователю
