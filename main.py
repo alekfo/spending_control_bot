@@ -1,7 +1,8 @@
 from config import BOT_TOKEN, admin_id
 from handlers.common_handlers import cancel_router, common_router
 from handlers.admin_handlers import admin_router
-from handlers.employees_handlers import employee_router
+from handlers.employee_handlers import employee_router
+from handlers.registration_handlers import registration_router
 from data.database import init_db
 
 import asyncio
@@ -27,6 +28,7 @@ dp = Dispatcher(storage=storage)
 dp.include_router(cancel_router)
 dp.include_router(common_router)
 dp.include_router(admin_router)
+dp.include_router(registration_router)
 dp.include_router(employee_router)
 
 # Главная асинхронная функция

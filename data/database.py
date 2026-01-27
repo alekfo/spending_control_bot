@@ -2,7 +2,7 @@ import os
 from datetime import datetime, timedelta
 from typing import List, Any
 
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, func
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, func, extract
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -67,9 +67,43 @@ def does_employee_exists(clients_telegram_id):
         employee = session.query(Employee).filter(Employee.clients_telegram_id == clients_telegram_id).one_or_none()
     return employee
 
-def get_spending_by_name(emp_id, month_to_check):
-    return f'here is spending of {emp_id} on {month_to_check} period'
+def get_spendings_by_month(employee_telegram_id, month_number):
+    """
+    Получить все расходы сотрудника за конкретный месяц
 
+    Args:
+        employee_telegram_id: Telegram ID сотрудника
+        month_number: Номер месяца (1-12)
+
+    Returns:
+        List[Spending]: Список расходов за указанный месяц
+    """
+    with SessionLocal() as session:
+        # Сначала находим сотрудника по telegram_id
+        employee = session.query(Employee).filter(Employee.clients_telegram_id == employee_telegram_id).first()
+        if not employee:
+            return []
+
+        # Получаем все расходы этого сотрудника
+        all_spendings = session.query(Spending).filter(
+            Spending.employees_id == employee.id
+        ).all()
+
+        # Фильтруем расходы по месяцу
+        spendings_for_month = []
+        current_year = datetime.now().year
+
+        for spending in all_spendings:
+            if spending.date_of_spending:
+                # Проверяем месяц и год
+                if (spending.date_of_spending.month == month_number and
+                        spending.date_of_spending.year == current_year):
+                    spendings_for_month.append(spending)
+
+        # Сортируем по дате
+        spendings_for_month.sort(key=lambda x: x.date_of_spending if x.date_of_spending else datetime.min, reverse=True)
+
+        return spendings_for_month
 
 
 

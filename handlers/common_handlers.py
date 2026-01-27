@@ -51,17 +51,28 @@ async def cmd_start(message: types.Message, state: FSMContext):
             parse_mode="Markdown",
             reply_markup=employees_main_menu_keyboard()
         )
+        await state.set_state(EmployeeStates.in_employees_main_menu)
+        return
     else:
+        # Получаем текущее состояние пользователя
+        current_state = await state.get_state()
+        if current_state == EmployeeStates.end_registration.state:
+            await message.answer(
+                '👋 *Дождитесь подтверждения регистрации от администратора. Спасибо!*\n'
+            )
+            return
+
         await message.answer(
             '👋 *Добро пожаловать в чат-бот контроля расходов отдела логистики VooMoo!*\n\n'
             '📝 Для работы в системе необходимо пройти регистрацию',
             parse_mode="Markdown",
             reply_markup=start_registration_keyboard()
         )
+        await state.set_state(EmployeeStates.wait_for_start)
         # Логируем нового пользователя
         logger.info(f'Новый пользователь бота: user_name: {user_name}, user_id {user_id}')
 
-    await state.set_state(EmployeeStates.wait_for_start)
+
 
 @common_router.message(StateFilter(None))
 async def handle_any_message(message: types.Message, state: FSMContext):
@@ -70,7 +81,7 @@ async def handle_any_message(message: types.Message, state: FSMContext):
 
 
 @cancel_router.message(Command("cancel"))
-@cancel_router.message(lambda message: message.text == "↩️Вернуться в основное меню")
+@cancel_router.message(lambda message: message.text == "🤖Главное меню")
 async def cancel_handler(message: types.Message, state: FSMContext):
     """Сброс состояния"""
     current_state = await state.get_state()

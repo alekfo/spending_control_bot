@@ -7,13 +7,13 @@ def employees_main_menu_keyboard():
     builder = InlineKeyboardBuilder()
 
     # Добавляем кнопки по одной
-    builder.add(types.InlineKeyboardButton(
+    builder.row(types.InlineKeyboardButton(
         text="💰Показать мои расходы",
         callback_data="show_my_spendings"
     ))
-    builder.add(types.InlineKeyboardButton(
+    builder.row(types.InlineKeyboardButton(
         text="➕Добавить расход",
-        callback_data="show_spending"
+        callback_data="add_spending"
     ))
 
     return builder.as_markup()

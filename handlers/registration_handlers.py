@@ -15,12 +15,12 @@ from aiogram.types import FSInputFile, BufferedInputFile
 from aiogram.types import ReplyKeyboardRemove
 
 logger = logging.getLogger(__name__)
-employee_router = Router()
+registration_router = Router()
 
 # Словарь для хранения ожидающих подтверждения пользователей
 pending_registrations = {}
 
-@employee_router.callback_query(lambda c: c.data == "start_registration", EmployeeStates.wait_for_start)
+@registration_router.callback_query(lambda c: c.data == "start_registration", EmployeeStates.wait_for_start)
 async def start_registration(callback_query: types.CallbackQuery, state: FSMContext):
     """
     Обработчик callback-запроса от кнопки "Начать регистрацию"
@@ -40,7 +40,7 @@ async def start_registration(callback_query: types.CallbackQuery, state: FSMCont
         reply_markup=return_keyboard()
     )
 
-@employee_router.message(StateFilter(EmployeeStates.getting_employees_name))
+@registration_router.message(StateFilter(EmployeeStates.getting_employees_name))
 async def start_registration(message: types.Message, state: FSMContext):
     try:
 
@@ -68,7 +68,7 @@ async def start_registration(message: types.Message, state: FSMContext):
             reply_markup=job_title_keyboard()
         )
 
-@employee_router.callback_query(StateFilter(EmployeeStates.getting_employees_job_title))
+@registration_router.callback_query(StateFilter(EmployeeStates.getting_employees_job_title))
 async def start_registration(callback_query: types.CallbackQuery, state: FSMContext):
     job_title_list = [
         'driver', 'logistician', 'loader'
@@ -108,7 +108,7 @@ async def start_registration(callback_query: types.CallbackQuery, state: FSMCont
     )
 
 
-@employee_router.callback_query(lambda c: c.data == "back",
+@registration_router.callback_query(lambda c: c.data == "back",
                                 StateFilter(EmployeeStates.getting_employees_work_number))
 async def back_to_job_title(callback_query: types.CallbackQuery, state: FSMContext):
     """Возврат к выбору должности"""
@@ -123,8 +123,8 @@ async def back_to_job_title(callback_query: types.CallbackQuery, state: FSMConte
         reply_markup=job_title_keyboard()
     )
 
-@employee_router.message(StateFilter(EmployeeStates.getting_employees_work_number))
-async def start_registration(message: types.Message, state: FSMContext, bot: Bot):
+@registration_router.message(StateFilter(EmployeeStates.getting_employees_work_number))
+async def end_registration(message: types.Message, state: FSMContext, bot: Bot):
     # Сохраняем данные сотрудника в state
     try:
         employees_work_number = message.text.strip()
@@ -136,8 +136,6 @@ async def start_registration(message: types.Message, state: FSMContext, bot: Bot
             reply_markup=return_keyboard()
         )
     else:
-        await state.set_state(EmployeeStates.end_registration)
-
         # Сохраняем данные пользователя в state
         await state.update_data(
             employees_work_number=employees_work_number
@@ -185,3 +183,4 @@ async def start_registration(message: types.Message, state: FSMContext, bot: Bot
             f"📨По результатам согласования Вы получите уведомление. До встречи!",
             reply_markup=return_keyboard()
         )
+        await state.set_state(EmployeeStates.end_registration)

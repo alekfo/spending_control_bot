@@ -1,22 +1,24 @@
 from math import lgamma
+from datetime import datetime
+from io import BytesIO
+import logging
+
+from aiogram import types, F, Router, Bot
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.types import FSInputFile, BufferedInputFile
+from aiogram.types import ReplyKeyboardRemove
 
 from config import admin_id
 from keyboards.main_keyboards import return_keyboard, month_keyboard
 from states import EmployeeStates, AdminStates
 from handlers.common_handlers import cancel_handler
 from google_sheet_service.google_sheet_main import synchronize
-from data.database import get_all_employees, does_employee_exists, get_spending_by_name, add_new_employee, get_session
-from handlers.employees_handlers import pending_registrations
+from data.database import get_all_employees, does_employee_exists, get_spendings_by_month, add_new_employee, get_session
+from handlers.registration_handlers import pending_registrations
 
-from datetime import datetime
-from io import BytesIO
-import logging
-from aiogram import types, F, Router, Bot
-from aiogram.filters import StateFilter
-from aiogram.fsm.context import FSMContext
-from aiogram.types import FSInputFile, BufferedInputFile
 
-from aiogram.types import ReplyKeyboardRemove
+
 
 logger = logging.getLogger(__name__)
 admin_router = Router()
@@ -194,6 +196,7 @@ async def handle_registration_decision(callback_query: types.CallbackQuery, bot:
         return
 
     user_data = pending_registrations[user_id]['data']
+    user_state = pending_registrations[user_id]['state']
 
     if action == 'approve':
         # Добавляем пользователя в Google Sheets
@@ -208,6 +211,9 @@ async def handle_registration_decision(callback_query: types.CallbackQuery, bot:
             logger.info(f"Добавлен новый пользователь: Имя: {user_data.get('employees_name', '')}, Телеграм-id: {user_id}")
 
             if result:
+                await user_state.clear()
+                await user_state.set_state(EmployeeStates.in_employees_main_menu)
+
                 # Отправляем уведомление пользователю
                 await bot.send_message(
                     chat_id=user_id,
@@ -232,6 +238,7 @@ async def handle_registration_decision(callback_query: types.CallbackQuery, bot:
             )
 
     else:  # reject_registration
+        await user_state.clear()
         # Отправляем уведомление пользователю об отказе
         await bot.send_message(
             chat_id=user_id,
