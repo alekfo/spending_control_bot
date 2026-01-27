@@ -33,13 +33,14 @@ async def synchronize_google_sheet(callback_query: types.CallbackQuery, state: F
     # Отвечаем на callback, чтобы убрать "часики" у кнопки
     await callback_query.answer()
     try:
-        result = synchronize()
+        result = await synchronize()
     except Exception as e:
         logger.error(f"Ошибка при синхронизации Google-таблицы: {e}")
         await callback_query.message.answer(
             f"Ошибка при синхронизации Google-таблицы: {e}",
             reply_markup=return_keyboard()
         )
+        return
 
 
     await callback_query.message.answer(
@@ -218,7 +219,8 @@ async def handle_registration_decision(callback_query: types.CallbackQuery, bot:
                 await bot.send_message(
                     chat_id=user_id,
                     text="✅ *Ваша регистрация подтверждена администратором!*\n\n"
-                         f"Добро пожаловать в систему, {user_data.get('employees_name', '')}!",
+                         f"Добро пожаловать в систему, {user_data.get('employees_name', '')}!\n\n"
+                         f"Чтобы начать - жми /start",
                     parse_mode="Markdown"
                 )
 

@@ -10,3 +10,4 @@ def check_data(table):
 
 if __name__ == "__main__":
     print(check_data('employees'))
+    print(check_data('spendings'))
