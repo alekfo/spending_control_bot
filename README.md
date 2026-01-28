@@ -1,6 +1,6 @@
 # Название проекта
 Чат-бот "Отдел логистики VooMoo "
-👨‍👩‍👧‍👦 Telegram-bot: @voomoo_spending_control_bot
+🤖 Telegram-bot: @voomoo_spending_control_bot
 
  [Свяжитесь с нашим ботом:](https://t.me/voomoo_spending_control_bot)
 
