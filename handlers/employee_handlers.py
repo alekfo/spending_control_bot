@@ -10,9 +10,9 @@ from aiogram.types import ReplyKeyboardRemove
 
 from config import admin_id
 from keyboards.main_keyboards import return_keyboard, back_keyboard, month_keyboard
-from keyboards.employees_keyboards import job_title_keyboard, confirmation_keyboard
+from keyboards.employees_keyboards import employees_main_menu_keyboard
 from states import EmployeeStates, AdminStates
-from handlers.common_handlers import cancel_handler, cmd_start
+from handlers.common_handlers import cancel_handler
 from data.database import create_spending, get_spendings_by_month
 
 
@@ -152,11 +152,10 @@ async def got_month_to_show_spending(callback_query: types.CallbackQuery, state:
             # Удаляем сообщение с должностями
             await callback_query.message.delete()
             await state.set_state(EmployeeStates.in_employees_main_menu)
-            await cmd_start(month_to_check, state)
             await callback_query.message.answer(
-                "🔙 Возврат в главное меню",
+                '💼 Выберите действие в системе:',
                 parse_mode="Markdown",
-                reply_markup=return_keyboard()
+                reply_markup=employees_main_menu_keyboard()
             )
             return
 
@@ -176,6 +175,7 @@ async def got_month_to_show_spending(callback_query: types.CallbackQuery, state:
     spendings = get_spendings_by_month(employee_id, month_number)
 
     if not spendings:
+        logger.info(f"✅ Нет расходов для сотрудника {employee_id} за {month_to_check}")
         await callback_query.message.answer(
             f"📭 *Расходы за {month_to_check}*\n\n"
             f"У вас нет зарегистрированных расходов за этот месяц.",
@@ -208,6 +208,8 @@ async def got_month_to_show_spending(callback_query: types.CallbackQuery, state:
     # Добавляем итоговую сумму
     output += f"💵 *ОБЩАЯ СУММА РАСХОДОВ:* {total_amount:.2f} руб.\n"
     output += f"📈 *Всего операций:* {len(spendings)}"
+
+    logger.info(f"✅ Успешно сформированы траты сотрудника {employee_id} за {month_to_check}")
 
     # Отправляем результат
     await callback_query.message.answer(

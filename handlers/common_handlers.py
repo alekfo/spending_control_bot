@@ -45,6 +45,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
     user_name = does_employee_exists(user_id)
 
     if user_name:
+        logger.info(f"✅ Вход зарегистрированного сотрудника с ID {user_id}")
         await message.answer(
             f'👋 *С вовзращением!*\n\n'
             f'💼 Выберите действие в системе:',
@@ -57,6 +58,7 @@ async def cmd_start(message: types.Message, state: FSMContext):
         # Получаем текущее состояние пользователя
         current_state = await state.get_state()
         if current_state == EmployeeStates.end_registration.state:
+            logger.info(f"Вход не зарегистрированного сотрудника с ID {user_id}, находящегося в ожидании")
             await message.answer(
                 '👋 *Дождитесь подтверждения регистрации от администратора. Спасибо!*\n'
             )
@@ -84,9 +86,6 @@ async def handle_any_message(message: types.Message, state: FSMContext):
 @cancel_router.message(lambda message: message.text == "🤖Главное меню")
 async def cancel_handler(message: types.Message, state: FSMContext):
     """Сброс состояния"""
-    current_state = await state.get_state()
-    if current_state is None:
-        return
 
     await state.clear()
     await cmd_start(message, state)

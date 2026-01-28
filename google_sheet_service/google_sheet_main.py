@@ -51,7 +51,6 @@ def test_google_sheet(wb):
 
     worksheet = wb.worksheet('Данные по стотрудникам')
     all_data = worksheet.get_all_values()
-    print(all_data)
 
     new_row = [
         "Комлов Валера",

@@ -62,6 +62,7 @@ async def get_all_employees_hand(callback_query: types.CallbackQuery, state: FSM
     employees = await get_all_employees()
 
     if not employees:
+        logger.info(f"✅ Список сотрудников пуст для получения")
         await callback_query.message.answer(
             "📭 *Список сотрудников пуст*\n\n"
             "В системе пока нет зарегистрированных сотрудников.",
@@ -87,6 +88,8 @@ async def get_all_employees_hand(callback_query: types.CallbackQuery, state: FSM
             f"   └─ 🔢 Таб. номер: {emp.employees_work_number}\n\n"
         )
     output += f"📊 *Всего сотрудников:* {len(employees)}"
+
+    logger.info(f"✅ Успешно получен список сотрудников")
 
     await callback_query.message.answer(
         output,
@@ -164,16 +167,54 @@ async def get_spending(callback_query: types.CallbackQuery, state: FSMContext):
         month_to_check=month_to_check
     )
 
-    await state.set_state(AdminStates.in_admins_main_menu)
+    month_number = month_list.index(month_to_check) + 1
 
     employee_data = await state.get_data()
 
     clients_id = employee_data.get('employees_id', '')
 
-    res = get_spending_by_name(clients_id, month_to_check)
+    spendings = get_spendings_by_month(clients_id, month_number)
 
+    if not spendings:
+        logger.info(f"✅ У сотрудника {clients_id} не расходов за {month_to_check}")
+        await callback_query.message.answer(
+            f"📭 *Расходы за {month_to_check}*\n\n"
+            f"У сотрудника нет расходов за указанный месяц.",
+            parse_mode="Markdown",
+            reply_markup=return_keyboard()
+        )
+        await state.set_state(AdminStates.in_admins_main_menu)
+        return
+
+    # Форматируем вывод
+    total_amount = 0
+    output = f"📊 *Расходы сотрудника с ID {clients_id} за {month_to_check.upper()}*\n\n"
+
+    for i, spending in enumerate(spendings, 1):
+        amount = float(spending.spending) if spending.spending else 0
+        total_amount += amount
+
+        # Форматируем дату
+        date_str = spending.date_of_spending.strftime("%d.%m.%Y %H:%M") if spending.date_of_spending else "Не указано"
+
+        # Добавляем детали и цель
+        details = f"\n   📝 *Детали:* {spending.details}" if spending.details else ""
+        purpose = f"\n   🎯 *Цель:* {spending.purpose}" if spending.purpose else ""
+
+        output += (
+            f"{i}. 💰 *{amount:.2f} руб.*\n"
+            f"   📅 *Дата:* {date_str}{details}{purpose}\n\n"
+        )
+
+    # Добавляем итоговую сумму
+    output += f"💵 *ОБЩАЯ СУММА РАСХОДОВ:* {total_amount:.2f} руб.\n"
+    output += f"📈 *Всего операций:* {len(spendings)}"
+
+    logger.info(f"✅ Успешно получен список рассходов сотрудника {clients_id} за {month_to_check}")
+    # Отправляем результат
     await callback_query.message.answer(
-        f"Расходы {clients_id} за {month_to_check}:\n{res}",
+        output,
+        parse_mode="Markdown",
         reply_markup=return_keyboard()
     )
 
